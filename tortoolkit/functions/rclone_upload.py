@@ -61,16 +61,32 @@ async def rclone_upload(path,message,user_msg,dest_drive,dest_base,edit_time,con
             await msg.delete()
             rclone_pr.kill()
             return True
-            
 
-        torlog.info("Upload complete")
+        
+        
+                torlog.info("Upload complete")
         gid = await get_glink(dest_drive,dest_base,os.path.basename(path),conf_path)
         torlog.info(f"Upload folder id :- {gid}")
         
-        folder_link = f"https://drive.google.com/folderview?id={gid}"
+        folder_link = f"https://drive.google.com/folderview?id={gid[0]}"
+
+        buttons = []
+        buttons.append(
+            [KeyboardButtonUrl("Drive URL",folder_link)]
+        )
+        gd_index = get_val("GD_INDEX_URL")
+        if gd_index:
+            index_link = "{}/{}/".format(gd_index.strip("/"), gid[1])
+            index_link = requote_uri(index_link)
+            torlog.info("index link "+str(index_link))
+            buttons.append(
+                [KeyboardButtonUrl("Index URL",index_link)]
+            )
+
+
         txtmsg = "<a href='tg://user?id={}'>Done</a>\n#uploads\nUPLOADED FOLDER :-<code>{}</code>\nTo Drive.".format(omsg.sender_id,os.path.basename(path))
         
-        await omsg.reply(txtmsg,buttons=[[KeyboardButtonUrl("Drive URL",folder_link)]],parse_mode="html")
+        await omsg.reply(txtmsg,buttons=buttons,parse_mode="html")
         await msg.delete()
 
 
@@ -99,12 +115,25 @@ async def rclone_upload(path,message,user_msg,dest_drive,dest_base,edit_time,con
         gid = await get_glink(dest_drive,dest_base,os.path.basename(path),conf_path,False)
         torlog.info(f"Upload folder id :- {gid}")
 
-        file_link = f"https://drive.google.com/file/d/{gid}/view"
-        
+        buttons = []
+
+        file_link = f"https://drive.google.com/file/d/{gid[0]}/view"
+        buttons.append(
+            [KeyboardButtonUrl("Drive URL",file_link)]
+        )
+        gd_index = get_val("GD_INDEX_URL")
+        if gd_index:
+            index_link = "{}/{}".format(gd_index.strip("/"), gid[1])
+            index_link = requote_uri(index_link)
+            torlog.info("index link "+str(index_link))
+            buttons.append(
+                [KeyboardButtonUrl("Index URL",index_link)]
+            )
+
         txtmsg = "<a href='tg://user?id={}'>Done</a>\n#uploads\nUPLOADED FILE :-<code>{}</code>\nTo Drive.".format(omsg.sender_id,os.path.basename(path))
 
         
-        await omsg.reply(txtmsg,buttons=[[KeyboardButtonUrl("Drive URL",file_link)]],parse_mode="html")
+        await omsg.reply(txtmsg,buttons=buttons,parse_mode="html")
         await msg.delete()
 
     upload_db.deregister_upload(message.chat_id, message.id)
